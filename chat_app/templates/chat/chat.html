@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat</title>
+</head>
+<body>
+    <h1>Welcome, {{ user.username }}</h1>
+    <h2>Users:</h2>
+    <ul>
+        {% for user in users %}
+            <li><a href="#" onclick="startChat('{{ user.username }}')">{{ user.username }}</a></li>
+        {% endfor %}
+    </ul>
+
+    <div id="chat-window" style="display: none;">
+        <h3>Chatting with <span id="chat-user"></span></h3>
+        <div id="messages"></div>
+        <input id="message-input" type="text" placeholder="Type a message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        let chatSocket;
+        function startChat(username) {
+            document.getElementById("chat-user").textContent = username;
+            document.getElementById("chat-window").style.display = "block";
+            chatSocket = new WebSocket("ws://" + window.location.host + "/ws/chat/" + username + "/");
+
+            chatSocket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const messages = document.getElementById("messages");
+                messages.innerHTML += `<p><strong>${data.sender}:</strong> ${data.message}</p>`;
+            };
+        }
+
+        function sendMessage() {
+            const input = document.getElementById("message-input");
+            const message = input.value;
+            chatSocket.send(JSON.stringify({
+                "message": message,
+            }));
+            input.value = "";
+        }
+    </script>
+</body>
+</html>
